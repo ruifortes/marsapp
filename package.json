@@ -1,0 +1,29 @@
+{
+  "name": "marsApp",
+  "version": "1.0.0",
+  "description": "sample app for optylon",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruifortes/marsapp"
+  },
+
+  "engines": {
+    "node": ">= 0.6.0",
+    "npm": ">= 1.0.0"
+  },
+
+  "dependencies": {
+    "express": "~4.13.0",
+    "bluebird": "~2.10.2",
+    "request-promise": "~1.0.1",
+    "knex": "~0.8.6",
+    "jade": "~1.11.0",
+    "moment": "~2.10.6",
+    "minimist": "~1.2.0"
+  },
+  "devDependencies": {},
+  "bundleDependencies": [],
+
+  "private": true,
+  "main": "server.js"
+}
