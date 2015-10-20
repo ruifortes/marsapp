@@ -4,7 +4,7 @@ module.exports = require('knex')({
     host     : 'localhost',
     user     : 'mars',
     password : 'mars',
-    database : 'marsApp'
+    database : 'marsWeather'
   },
   debug: true
 })

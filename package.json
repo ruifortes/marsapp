@@ -24,6 +24,10 @@
   "devDependencies": {},
   "bundleDependencies": [],
 
+  "scripts": {
+    "dist": "webpack --progress --colors --display-error-details --config webpack.config_dist.js",
+    "dist.watch": "webpack --progress --colors --display-error-details --config webpack.config_dist.js --watch"
+  },
   "private": true,
   "main": "server.js"
 }

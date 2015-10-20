@@ -1,2 +1,2 @@
-# marsapp
+# Mars Weather App
 job chalenge

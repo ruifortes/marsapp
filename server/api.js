@@ -10,6 +10,19 @@ var Api = function(router){
 
   var minDate = new Date(2015, 1, 1)
 
+  this.getReports = function (fromDate, toDate) {
+
+    var query = knex.select().from('reports')
+
+    if (toDate) {
+      query.whereBetween('terrestrial_date', [fromDate, toDate])
+    } else {
+      query.where('terrestrial_date', fromDate.format('YYYY-MM-DD'))
+    }
+
+    return query
+  }
+
   this.getLastReportDate = function(){
     var lastDate = moment(new Date('2015-8-1'))
     return Promise.resolve(lastDate)
@@ -99,10 +112,10 @@ var Api = function(router){
 
         return Promise.all(insertTasks)
               .then(function (ret) {
-                console.log(ret);
+                console.log('Finish inserting')
               })
               .catch(function (err) {
-                console.log(err);
+                console.log(err)
               })
 
       })
@@ -120,7 +133,7 @@ var Api = function(router){
 
       return knex.schema.createTable('reports', function (table) {
         table.increments()
-        table.string('terrestrial_date')
+        table.date('terrestrial_date').index()
         table.integer('sol')
         table.integer('ls')
         table.integer('min_temp')
@@ -136,8 +149,6 @@ var Api = function(router){
         table.string('season')
         table.string('sunrise')
         table.string('sunset')
-      }).then(function (something) {
-        return 'Finish DB reset'
       })
 
     })
@@ -145,7 +156,6 @@ var Api = function(router){
 
 
   }
-
 
 }
 
@@ -169,12 +179,23 @@ function addRoutes(api, router){
 
   })
 
-  router.get('/report/:id?', function(req, res) {
+  router.get('/report/:date', function(req, res) {
+    var repDate = moment(req.params.date)
 
-    if (req.params.id != null) {
-      res.send({id:req.params.id})
+    if (repDate.isValid()) {
+      api.getReports(repDate).then(function(rows){
+        if(rows.length > 0){
+          res.send(rows[0])
+        } else {
+          res.status(404).end()
+        }
+
+      }).catch(function (err) {
+        res.status(500).end()
+      })
+
     } else {
-      res.status(404).end()
+      res.status(400).end()
     }
 
   })
@@ -187,11 +208,11 @@ module.exports = function(router){
   if(singleton){
     return singleton
   } else if(router){
-    var api = new Api(router)
-    addRoutes(api, router);
+    var singleton = new Api(router)
+    addRoutes(singleton, router)
+    return singleton
   } else {
     throw new Error("can't initialize initialize api without router")
   }
 
-  return api;
 }
