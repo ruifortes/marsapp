@@ -6,7 +6,7 @@ var Promise = require('bluebird')
 
 var singleton
 
-var Api = function(router){
+var Api = function (router){
 
   var minDate = new Date(2015, 1, 1)
 
@@ -23,21 +23,22 @@ var Api = function(router){
     return query
   }
 
-  this.getLastReportDate = function(){
-    var lastDate = moment(new Date('2015-8-1'))
-    return Promise.resolve(lastDate)
+  this.getLastReportDate = function (){
 
-    // return knex('reports').max('terrestrial_date').then(function (maxDate) {
-    //   if (maxDate) {
-    //     return moment(maxDate)
-    //   } else {
-    //     return moment('2015-8-1')
-    //   }
-    // })
+    // var lastDate = moment(new Date('2015-8-1'))
+    // return Promise.resolve(lastDate)
+
+    return knex('reports').max('terrestrial_date').then(function (rows) {
+      if (rows.length > 0) {
+        return moment(new Date(rows[0].max))
+      } else {
+        return false
+      }
+    })
 
   }
 
-  this.fetchReports = function(startDate){
+  this.fetchReports = function (startDate){
 
     var self = this
 
@@ -66,7 +67,7 @@ var Api = function(router){
             uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page)
             , json: true
           })
-          .then(function(data){
+          .then(function (data){
 
             results.push.apply(results, data.results)
 
@@ -77,7 +78,7 @@ var Api = function(router){
             }
 
           })
-          .catch(function(err){
+          .catch(function (err){
             reject(err)
           })
 
@@ -96,7 +97,7 @@ var Api = function(router){
 
           var rawQuery = query.toSQL().sql
 
-          query.toSQL().bindings.forEach(function(val){
+          query.toSQL().bindings.forEach(function (val){
             if(val == null){
               rawQuery = rawQuery.replace("?", "NULL")
             } else if(typeof val === "string") {
@@ -129,7 +130,7 @@ var Api = function(router){
 
   this.resetDB = function () {
 
-    return knex.schema.dropTableIfExists('reports').then(function(ret){
+    return knex.schema.dropTableIfExists('reports').then(function (ret){
 
       return knex.schema.createTable('reports', function (table) {
         table.increments()
@@ -159,52 +160,74 @@ var Api = function(router){
 
 }
 
+
+
 /**
  *  Add routes to app
  */
+
 function addRoutes(api, router){
 
-  router.get('/report/test', function(req, res) {
+  router.get('/report/test', function (req, res) {
 
 //     api.resetDB().then(function (data) {
 //       console.log(data);
 //     })
 
-    api.fetchReports(moment(new Date('2015-10-10'))).then(function(data){
+    api.fetchReports(moment(new Date('2015-10-10'))).then(function (data){
       console.log('Finish fetching')
     }).
-    catch(function(err){
+    catch(function (err){
       console.log(err)
     })
 
   })
 
-  router.get('/report/:date', function(req, res) {
-    var repDate = moment(req.params.date)
+  router.get('/report/:date?', function (req, res) {
 
-    if (repDate.isValid()) {
-      api.getReports(repDate).then(function(rows){
-        if(rows.length > 0){
-          res.send(rows[0])
+    var wait // wait for possible max data query
+    var reqDate = !!req.params.date && moment(req.params.date)
+
+    if (!reqDate) { // no date. get last report date
+      wait = api.getLastReportDate().then(function (date) {
+        if (date) {
+          return date
         } else {
-          res.status(404).end()
+          return res.status(500).end()
         }
-
-      }).catch(function (err) {
-        res.status(500).end()
       })
 
+    } else if(!reqDate.isValid()){ // invalid date
+
+      return res.status(400).end()
+
     } else {
-      res.status(400).end()
+
+      wait = Promise.resolve(reqDate)
+
     }
+
+    wait.then(function (date) {
+      api.getReports(date).then(function (rows){
+        if(rows.length > 0){
+          var report = rows[0]
+          //change terrestrial_date format
+          report.terrestrial_date = moment(report.terrestrial_date).format('YYYY-MM-DD')
+          return res.send(report)
+        } else {
+          return res.status(404).end()
+        }
+      })
+    }).catch(function (err) {
+      return res.status(500).end()
+    })
 
   })
 
 
 }
 
-
-module.exports = function(router){
+module.exports = function (router){
   if(singleton){
     return singleton
   } else if(router){
@@ -216,3 +239,4 @@ module.exports = function(router){
   }
 
 }
+

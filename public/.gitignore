@@ -1,4 +1,4 @@
 # Ignore Webpack bundles here
-*
+# *
 
 !.gitignore
