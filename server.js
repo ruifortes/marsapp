@@ -33,7 +33,7 @@ var waitForReset = new Promise(function (resolve,reject) {
   var reset = argv.reset || process.env.reset
   if(reset) {
     api.resetDB().then(function () {
-      var date = moment(reset, ["YYYY-MM-DD"])
+      var date = moment.utc(reset, ["YYYY-MM-DD"])
       if(date.isValid()){
         api.fetchReports(date).then(function () {
           return resolve('Reset DB with reports since ' + date.format('YYYY-MM-DD'))

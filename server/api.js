@@ -25,12 +25,9 @@ var Api = function (router){
 
   this.getLastReportDate = function (){
 
-    // var lastDate = moment(new Date('2015-8-1'))
-    // return Promise.resolve(lastDate)
-
     return knex('reports').max('terrestrial_date').then(function (rows) {
       if (rows.length > 0) {
-        return moment(new Date(rows[0].max))
+        return moment.utc(rows[0].max) //knex return local date object. don't parse as UTC
       } else {
         return false
       }
@@ -64,7 +61,7 @@ var Api = function (router){
         function _fetch(startDate, page){
           console.log('Fetching page ' + page)
           return request({
-            uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page)
+            uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.utc().format('YYYY-MM-DD'), page)
             , json: true
           })
           .then(function (data){
@@ -134,7 +131,7 @@ var Api = function (router){
 
       return knex.schema.createTable('reports', function (table) {
         table.increments()
-        table.date('terrestrial_date').index()
+        table.string('terrestrial_date').index()
         table.integer('sol')
         table.integer('ls')
         table.integer('min_temp')
@@ -168,25 +165,10 @@ var Api = function (router){
 
 function addRoutes(api, router){
 
-  router.get('/report/test', function (req, res) {
-
-//     api.resetDB().then(function (data) {
-//       console.log(data);
-//     })
-
-    api.fetchReports(moment(new Date('2015-10-10'))).then(function (data){
-      console.log('Finish fetching')
-    }).
-    catch(function (err){
-      console.log(err)
-    })
-
-  })
-
   router.get('/report/:date?', function (req, res) {
 
     var wait // wait for possible max data query
-    var reqDate = !!req.params.date && moment(req.params.date)
+    var reqDate = !!req.params.date && moment.utc(req.params.date)
 
     if (!reqDate) { // no date. get last report date
       wait = api.getLastReportDate().then(function (date) {
@@ -211,7 +193,7 @@ function addRoutes(api, router){
       api.getReports(date).then(function (rows){
         if(rows.length > 0){
           var report = rows[0]
-          //change terrestrial_date format
+          //change terrestrial_date formated string
           report.terrestrial_date = moment(report.terrestrial_date).format('YYYY-MM-DD')
           return res.send(report)
         } else {
@@ -239,4 +221,3 @@ module.exports = function (router){
   }
 
 }
-
