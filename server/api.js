@@ -4,18 +4,19 @@ var Promise = require('bluebird')
   , util = require('util')
   , moment = require('moment')
 
-var singleton
+var theApi
 
 var Api = function (router){
 
-  var minDate = new Date(2015, 1, 1)
 
   this.getReports = function (fromDate, toDate) {
 
     var query = knex.select().from('reports')
 
     if (toDate) {
-      query.whereBetween('terrestrial_date', [fromDate, toDate])
+      query.whereBetween('terrestrial_date',
+        [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')]
+      )
     } else {
       query.where('terrestrial_date', fromDate.format('YYYY-MM-DD'))
     }
@@ -59,9 +60,10 @@ var Api = function (router){
       return new Promise(function (resolve, reject) {
 
         function _fetch(startDate, page){
-          console.log('Fetching page ' + page)
+          page = page || 1
+          console.log(page > 1  ? 'Fetching...' : 'Fetching page' + page)
           return request({
-            uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.utc().format('YYYY-MM-DD'), page)
+            uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page)
             , json: true
           })
           .then(function (data){
@@ -110,7 +112,7 @@ var Api = function (router){
 
         return Promise.all(insertTasks)
               .then(function (ret) {
-                console.log('Finish inserting')
+                console.log('Fetch reports since ' + startDate.format('YYYY-MM-DD'))
               })
               .catch(function (err) {
                 console.log(err)
@@ -123,6 +125,16 @@ var Api = function (router){
       return Promise.reject("Can't fetch without date nor previous report")
     })
 
+  }
+
+  this.fetchEvery = function (length, unit) { // ex: 2, 'minutes'
+
+    var self = this
+    var d = moment.duration(length, unit).asMilliseconds()
+
+    var timer = setInterval(function () {
+        self.fetchReports()
+    }, d)
   }
 
   this.resetDB = function () {
@@ -171,6 +183,7 @@ function addRoutes(api, router){
     var reqDate = !!req.params.date && moment.utc(req.params.date)
 
     if (!reqDate) { // no date. get last report date
+
       wait = api.getLastReportDate().then(function (date) {
         if (date) {
           return date
@@ -179,13 +192,13 @@ function addRoutes(api, router){
         }
       })
 
-    } else if(!reqDate.isValid()){ // invalid date
-
-      return res.status(400).end()
-
-    } else {
+    } else if(reqDate.isValid()){
 
       wait = Promise.resolve(reqDate)
+
+    } else { // invalid date
+
+      return res.status(400).end()
 
     }
 
@@ -209,13 +222,16 @@ function addRoutes(api, router){
 
 }
 
+// initialize Api as singleton and populate router
 module.exports = function (router){
-  if(singleton){
-    return singleton
+
+  if(theApi){
+    return theApi
   } else if(router){
-    var singleton = new Api(router)
-    addRoutes(singleton, router)
-    return singleton
+    var theApi = new Api(router)
+    addRoutes(theApi, router)
+    theApi.fetchEvery(1, 'minutes')
+    return theApi
   } else {
     throw new Error("can't initialize initialize api without router")
   }
