@@ -1,0 +1,19 @@
+.statusBar {
+  // padding: 10px;
+  border-top: 1px solid lightgrey;
+  > div {
+    display: inline-block;
+    padding: 0.5em 1em;
+    &:nth-child(1) {
+      position: relative;
+      width: 100px;
+      border-left: 1px solid lightgrey;
+      // &::after {
+      //   content: '|';
+      //   position: absolute;
+      //   right: 0px;
+      //   margin-right: 10px;
+      // }
+    }
+  }
+}

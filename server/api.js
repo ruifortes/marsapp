@@ -5,41 +5,65 @@ var Promise = require('bluebird')
   , moment = require('moment')
 
 var theApi
+var sockets
 
-var Api = function (router){
+var Api = function (){
 
+  this._lastDate
 
-  this.getReports = function (fromDate, toDate) {
+  this.getReportList = function (fromDate, toDate, page, pageLength) {
+    page = page || 1
+    pageLength = pageLength || 10
 
     var query = knex.select().from('reports')
 
-    if (toDate) {
+    if (fromDate && toDate) {
       query.whereBetween('terrestrial_date',
         [fromDate.format('YYYY-MM-DD'), toDate.format('YYYY-MM-DD')]
       )
-    } else {
+    } else if(fromDate){
       query.where('terrestrial_date', fromDate.format('YYYY-MM-DD'))
     }
+
+    query.orderBy('terrestrial_date', 'desc')
+
+    if(page > 0){
+      query.offset((page-1) * pageLength).limit(pageLength)
+    } else {
+      query.limit(500)
+    }
+
+    return query
+  }
+
+  this.getReport = function (date) {
+
+    var query = knex.select()
+          .from('reports')
+          .where('terrestrial_date', date.format('YYYY-MM-DD'))
 
     return query
   }
 
   this.getLastReportDate = function (){
 
-    return knex('reports').max('terrestrial_date').then(function (rows) {
-      if (rows.length > 0) {
-        return moment.utc(rows[0].max) //knex return local date object. don't parse as UTC
-      } else {
-        return false
-      }
-    })
-
+    if(this._lastDate){
+      return Promise.return(this._lastDate)
+    } else {
+      return knex('reports').max('terrestrial_date').then(function (rows) {
+        if (rows.length > 0) {
+          this._lastDate = moment.utc(rows[0].max)
+          return this._lastDate
+        } else {
+          throw new Error('DB empty. Please reset with date')
+        }
+      })
+    }
   }
 
   this.fetchReports = function (startDate){
 
     var self = this
-
     var results = []
 
     var waitForLastDate
@@ -50,18 +74,20 @@ var Api = function (router){
       waitForLastDate = this.getLastReportDate()
                   .then(function (lastDate) {
                     lastDate.add(1, 'd')
-                    return Promise.resolve(lastDate)
+                    // return Promise.resolve(lastDate)
+                    return lastDate
                   })
 
     }
 
     return waitForLastDate.then(function (startDate) {
+      console.log('Fetch reports since ' + startDate.format('YYYY-MM-DD'))
 
       return new Promise(function (resolve, reject) {
 
         function _fetch(startDate, page){
           page = page || 1
-          console.log(page > 1  ? 'Fetching...' : 'Fetching page' + page)
+          console.log(page > 1  ? 'Fetching page' + page : 'Fetching...')
           return request({
             uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page)
             , json: true
@@ -73,6 +99,7 @@ var Api = function (router){
             if(data.next){
               _fetch(startDate, page + 1)
             } else {
+              if(!results.length) console.log('...nothing new')
               resolve(results)
             }
 
@@ -86,14 +113,16 @@ var Api = function (router){
         _fetch(startDate, 1)
 
       }).then(function (data) {
+
+        if(!data.length) return 0
+
+
         // insert in DB
         var insertTasks = data.map(function (item) {
           var query = knex('reports').insert(item)
 
           // knex seams to wraps integer values in single quotes. Seams like a BUG
           // I'll just create the raw query string from knex object info.
-
-
           var rawQuery = query.toSQL().sql
 
           query.toSQL().bindings.forEach(function (val){
@@ -112,7 +141,8 @@ var Api = function (router){
 
         return Promise.all(insertTasks)
               .then(function (ret) {
-                console.log('Fetch reports since ' + startDate.format('YYYY-MM-DD'))
+                console.log('finish fetching')
+                return data.length
               })
               .catch(function (err) {
                 console.log(err)
@@ -121,20 +151,32 @@ var Api = function (router){
       })
 
     })
-    .catch(function (err) {
-      return Promise.reject("Can't fetch without date nor previous report")
-    })
-
+    // .catch(function (err) {
+    //   return Promise.reject(err)
+    // })
   }
 
   this.fetchEvery = function (length, unit) { // ex: 2, 'minutes'
 
     var self = this
-    var d = moment.duration(length, unit).asMilliseconds()
 
+    function _fetchAndEmmit(){
+
+      self.fetchReports().then(function (count) {
+        self.getLastReportDate().then(function (lastDate) {
+          sockets.emit('serverUpdated', {
+            count: count,
+            lastDate: lastDate.format('YYYY-MM-DD')
+          })
+        })
+      })
+
+    }
+
+    _fetchAndEmmit()
     var timer = setInterval(function () {
-        self.fetchReports()
-    }, d)
+      _fetchAndEmmit()
+    }, moment.duration(length, unit).asMilliseconds())
   }
 
   this.resetDB = function () {
@@ -180,7 +222,7 @@ function addRoutes(api, router){
   router.get('/report/:date?', function (req, res) {
 
     var wait // wait for possible max data query
-    var reqDate = !!req.params.date && moment.utc(req.params.date)
+    var reqDate = !!req.params.date && moment(req.params.date)
 
     if (!reqDate) { // no date. get last report date
 
@@ -203,7 +245,7 @@ function addRoutes(api, router){
     }
 
     wait.then(function (date) {
-      api.getReports(date).then(function (rows){
+      api.getReport(date).then(function (rows){
         if(rows.length > 0){
           var report = rows[0]
           //change terrestrial_date formated string
@@ -220,16 +262,63 @@ function addRoutes(api, router){
   })
 
 
+  router.get('/reports', function (req, res) {
+
+    var fromDate = moment(req.query.from || null)
+      , toDate = moment(req.query.to || null)
+      , page = parseInt(req.query.page || 1)
+      , pageLenght = parseInt(req.query.pageLenght || 10)
+
+    if(req.query.from != null && !fromDate.isValid()) return res.status(404).send('invalid fromDate param')
+    if(req.query.to != null && !toDate.isValid()) return res.status(404).send('invalid toDate param')
+    if(isNaN(page)) return res.status(404).send('invalid page param')
+    if(isNaN(pageLenght)) return res.status(404).send('invalid page param')
+
+    fromDate = fromDate.isValid() || undefined
+    toDate = toDate.isValid() || undefined
+
+    api.getReportList(fromDate, toDate, page, pageLenght).then(function (rows){
+
+      rows.map(function (report) {
+        report.terrestrial_date = moment(report.terrestrial_date).format('YYYY-MM-DD')
+      })
+
+      return res.send(rows)
+
+    }).catch(function (err) {
+      return res.status(500).end()
+    })
+
+  })
+
 }
 
+
+
 // initialize Api as singleton and populate router
-module.exports = function (router){
+module.exports = function (router, io){
+
+  // set global api var
+  sockets = io.sockets
 
   if(theApi){
     return theApi
-  } else if(router){
-    var theApi = new Api(router)
+  } else if(router && io){
+
+    var theApi = new Api()
+
     addRoutes(theApi, router)
+
+    io.on('connection', function (socket) {
+      theApi.getLastReportDate().then(function (lastDate) {
+        socket.emit('serverUpdated', {
+          count: null,
+          lastDate: lastDate.format('YYYY-MM-DD')
+        })
+      })
+    })
+
+
     theApi.fetchEvery(1, 'minutes')
     return theApi
   } else {

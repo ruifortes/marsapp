@@ -24,7 +24,8 @@ module.exports = [
   },
   {
     test: /\.scss$/,
-    loader: ExtractTextPlugin.extract('style-loader', 'css-loader!sass-loader?sourceMap')
+    // loader: ExtractTextPlugin.extract('style-loader', 'css-loader!sass-loader?sourceMap')
+    loader: 'style-loader!css-loader!sass-loader?sourceMap'
   },
   {
     test: /\.(otf|eot|svg|ttf|woff|woff2)$/,

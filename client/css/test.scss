@@ -1,0 +1,42 @@
+.menu {
+  display: block;
+  background-color: yellow;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.menu-section-left {
+  float:left;
+}
+
+.menu-section-right {
+  float:right;
+}
+
+@media (max-width: 400px) {
+  .menu-section-left,
+  .menu-section-right {
+    display: block;
+    margin:auto;
+    text-align: center;
+    float:none;
+  }
+}
+
+
+.brand {
+  padding: 10px;
+}
+
+.menu-list {
+  margin: 0px;
+  padding: 0px;
+  display: inline-block;
+}
+
+.menu-item {
+  display: inline-block;
+  padding: .5em 1em;
+
+}

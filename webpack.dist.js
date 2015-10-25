@@ -10,7 +10,7 @@ module.exports = {
     filename     : '[name].js'
   },
   module: {
-    loaders: require('./webpack.config_loaders')
+    loaders: require('./webpack.loaders')
   },
   devtool: 'source-map',
   externals: {

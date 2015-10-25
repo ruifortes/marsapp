@@ -1,0 +1,25 @@
+.report_view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.report_nav {
+  flex: 0 0 auto;
+  padding: 0.9em 1em;
+  background-color: rgb(235, 235, 235);;
+}
+
+.report {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 10px 0px;
+  padding: 0px 10px;
+  line-height: 1.4em;
+}
+
+.report li span:nth-child(1){
+  display: inline-block;
+  text-transform: capitalize;
+  width: 200px;
+}

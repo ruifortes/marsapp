@@ -1,0 +1,17 @@
+body, #react {
+ width:100%; height: 100%;
+}
+
+a {
+  display: block;
+}
+
+ul {
+  list-style-type: none;
+}
+
+$break-small: 400px;
+
+$sans-serif:  Helvetica Neue, Arial, sans-serif;
+
+$global-transition-duration: .3s;

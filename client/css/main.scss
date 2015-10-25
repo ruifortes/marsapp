@@ -1,0 +1,23 @@
+@import 'config';
+@import 'reset';
+@import '_layout';
+@import '_menu';
+@import '_statusBar';
+@import '_report_view';
+
+// @import '../components/toggle';
+
+
+// needed in order to fill flex container (check .main)
+.fillflex {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: $break-small) {
+  .custom-toggle {
+      display: none;
+  }
+}

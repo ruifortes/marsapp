@@ -1,15 +1,20 @@
 doctype html
 html(lang='pt-pt')
-  head
-    title Mars Weather
-    
+  head  
     meta(charset='utf8')
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    
+    title Mars Weather  
+    
+    //- link(rel='stylesheet', href='http://yui.yahooapis.com/pure/0.6.0/pure.css')
+    //- link(rel='stylesheet', href='https://storage.googleapis.com/code.getmdl.io/1.0.5/material.deep_orange-light_blue.min.css')
+    link(rel='stylesheet', href='styles.css')
+    
     script(src='https://fb.me/react-with-addons-0.14.0.js')
     script(src='https://fb.me/react-dom-0.14.0.js')
-  
+    
   body
-    #app!= content
+    #react.wrapper!= content
     
   script(src='main.js', defer)
     

@@ -1,16 +1,20 @@
 var express = require('express')
+  , app = require('express')()
+  , server = require('http').Server(app)
+  , io = require('socket.io')(server)
   , fs      = require('fs')
   , jade    = require('jade')
   , Promise = require('bluebird')
-  , moment = require('moment')
+  , moment  = require('moment')
+
 
 var argv = require('minimist')(process.argv.slice(2))
 
 //  api factory return api instance and populates router
 var apiRouter = express.Router()
-var api = require('./server/api.js')(apiRouter)
+var api = require('./server/api.js')(apiRouter, io)
 
-var app = express()
+// var app = express()
 
 app.locals.ipAddress = 'localhost'
 app.locals.port = 3000
@@ -51,8 +55,15 @@ var waitForReset = new Promise(function (resolve,reject) {
 
 waitForReset.then(function (msg) {
   console.log(msg)
-  app.listen(app.locals.port, app.locals.ipAddress, function() {
+
+  // app.listen(app.locals.port, app.locals.ipAddress, function() {
+  //   console.log('%s: Node server started on %s:%d ...',
+  //   Date(Date.now() ), app.locals.ipAddress, app.locals.port)
+  // })
+
+  server.listen(app.locals.port, app.locals.ipAddress, function() {
     console.log('%s: Node server started on %s:%d ...',
     Date(Date.now() ), app.locals.ipAddress, app.locals.port)
   })
+
 })
