@@ -1,0 +1,29 @@
+@font-face {
+	font-family: "iconfont";
+	src: url("../fonts/iconfont.eot") format("embedded-opentype"),
+url("../fonts/iconfont.woff") format("woff"),
+url("../fonts/iconfont.ttf") format("truetype"),
+url("../fonts/iconfont.svg") format("svg");
+}
+
+
+[class^="icon-"],
+[class*="icon-"]{
+	font-family: iconfont !important;
+	font-style: normal;
+	font-weight: normal !important;
+	vertical-align: top;
+}
+
+.icon-nav-left:before {
+	content: "\f101";
+}
+.icon-nav-right:before {
+	content: "\f102";
+}
+.icon-wea-cloudy:before {
+	content: "\f103";
+}
+.icon-wea-sunny:before {
+	content: "\f104";
+}

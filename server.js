@@ -7,63 +7,89 @@ var express = require('express')
   , Promise = require('bluebird')
   , moment  = require('moment')
 
+var cfg = require('./config.js')
 
-var argv = require('minimist')(process.argv.slice(2))
 
-//  api factory return api instance and populates router
-var apiRouter = express.Router()
-var api = require('./server/api.js')(apiRouter, io)
+//validate args
+var rawArgv = require('minimist')(process.argv.slice(2))
 
-// var app = express()
+var validArgs = (function (argv) {
 
-app.locals.ipAddress = 'localhost'
-app.locals.port = 3000
+  argv.reset = argv.reset || process.env.reset
 
+  if(argv.reset){
+    argv.reset = moment.utc(argv.reset, ["YYYY-MM-DD"],true)
+    if(!argv.reset.isValid()){
+      console.log('Reset must be set to a vilid date string')
+      return false
+    }
+  }
+
+  return argv
+
+})(JSON.parse(JSON.stringify(rawArgv)))
+
+if(!validArgs) process.exit()
+
+
+// set Express params
 app.set('views', './views');
 app.set('view engine', 'jade');
 
 app.use(express.static('public'))
 
+//  api factory return api instance and populates router
+var apiRouter = express.Router()
+var api = require('./server/api.js')(apiRouter, io)
+
 app.use('/api', apiRouter)
 
+// set base url
 app.use('/',  function(req, res) {
   // using jade to make this isomorphic later
   res.render('index', { content: 'TEST CONTENT' })
 
 })
 
-//start server after reset
-var waitForReset = new Promise(function (resolve,reject) {
-  var reset = argv.reset || process.env.reset
-  if(reset) {
-    api.resetDB().then(function () {
-      var date = moment.utc(reset, ["YYYY-MM-DD"])
-      if(date.isValid()){
-        api.fetchReports(date).then(function () {
-          return resolve('Reset DB with reports since ' + date.format('YYYY-MM-DD'))
-        })
-      } else {
-        return resolve('Reset to empty DB')
-      }
 
+
+
+//start server after reset
+var waitForApiInitialization = new Promise(function (resolve, reject) {
+
+  if (validArgs.reset) {
+    api.resetDB(validArgs.reset).then(function () {
+      resolve('Reset DB with reports since ' + validArgs.reset.format('YYYY-MM-DD'))
+    }).catch(function (err) {
+      reject(err)
     })
   } else {
-    return resolve()
+    resolve('')
   }
+
+  // if(validArgs.reset) {
+  //   api.resetDB().then(function () {
+  //     api.fetchReports(validArgs.reset).then(function () {
+  //       return resolve('Reset DB with reports since ' + validArgs.reset.format('YYYY-MM-DD'))
+  //     })
+  //   })
+  // } else {
+  //   api.fetchReports().then(function () {
+  //     return resolve('Fetched reports since ' + validArgs.reset.format('YYYY-MM-DD'))
+  //   })
+  // }
+
 })
 
 
-waitForReset.then(function (msg) {
+waitForApiInitialization.then(function (msg) {
   console.log(msg)
 
-  // app.listen(app.locals.port, app.locals.ipAddress, function() {
-  //   console.log('%s: Node server started on %s:%d ...',
-  //   Date(Date.now() ), app.locals.ipAddress, app.locals.port)
-  // })
-
-  server.listen(app.locals.port, app.locals.ipAddress, function() {
-    console.log('%s: Node server started on %s:%d ...',
-    Date(Date.now() ), app.locals.ipAddress, app.locals.port)
+  server.listen(cfg.host.port, cfg.host.ip, function() {
+    console.log('Node server listening on %s:%d ...', cfg.host.ip, cfg.host.port)
   })
 
+}).catch(function (err) {
+  console.log(err)
+  process.exit()
 })

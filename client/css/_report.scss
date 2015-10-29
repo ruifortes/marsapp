@@ -7,7 +7,13 @@
 .report_nav {
   flex: 0 0 auto;
   padding: 0.9em 1em;
-  background-color: rgb(235, 235, 235);;
+  background-color: rgb(235, 235, 235);
+  .control {
+    float:right;
+    .icon-nav-right {
+      margin-left: 50px;
+    }
+  }
 }
 
 .report {
@@ -22,4 +28,12 @@
   display: inline-block;
   text-transform: capitalize;
   width: 200px;
+}
+
+.report.empty p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  color: lightgray;
 }

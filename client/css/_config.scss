@@ -3,14 +3,15 @@ body, #react {
 }
 
 a {
-  display: block;
+  cursor: pointer;
+  cursor: hand;
 }
 
 ul {
   list-style-type: none;
 }
 
-$break-small: 400px;
+$break-small: 420px;
 
 $sans-serif:  Helvetica Neue, Arial, sans-serif;
 

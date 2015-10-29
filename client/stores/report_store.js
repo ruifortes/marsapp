@@ -1,23 +1,26 @@
 var EventEmitter = require('events').EventEmitter
 var request = require('reqwest')
 
-var _setUrlState = require('../_utils.js')._setUrlState
+var urlState = require('../urlState.js')
 
 var ReportStore = function(){
 
   this.latestDate = null
 
-  this.getReportList = function (page) {
+  this.getReportList = function (page, pageLength) {
     var self = this
+    pageLength = pageLength || 30
 
     return request({
       url: '/api/reports',
-      data: {page: page},
+      data: {page: page, pageLength: pageLength}
     }).then(function (res) {
 
       self.emit('change' ,{
         reportList: res
       })
+
+      return res
 
     })
 
@@ -26,7 +29,7 @@ var ReportStore = function(){
   this.getReport = function (dateStr){
     var self = this
 
-    _setUrlState(null, dateStr)
+    // urlState.set(null, dateStr)
 
     dateStr = dateStr || ''
 

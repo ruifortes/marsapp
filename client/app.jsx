@@ -1,52 +1,43 @@
 var React = require('react')
+  , ReactDOM = require('react-dom')
   , request = require('reqwest')
   , io = require('socket.io-client')
   , moment = require('moment')
 
-var Menu = require('./menu.jsx')
-  , ViewManager = require('./viewManager.jsx')
-  , StatusBar = require('./statusBar.jsx')
+var ViewManager = require('./viewManager.jsx')
+  , Menu = require('./views/menu.jsx')
+  , StatusBar = require('./views/statusBar.jsx')
 
 var reportStore = require('./stores/report_store.js')
-var _utils = require('./_utils.js')
+var urlState = require('./urlState.js')
 
 var App = React.createClass({
   getInitialState: function (){
 
-    return _utils._getUrlState()
+    return urlState.get()
 
   },
-  handle_popState: function (evt) {
 
-    evt.preventDefault()
-    this.setState(_utils._getUrlState())
-
-  },
-  handle_navChange: function (view, viewParams) {
-
-    this.setState(_utils._setUrlState(view, viewParams))
-  },
   componentDidMount: function (){
     var self = this
 
-    self.setState(_utils._getUrlState())
-
-    var socket = io.connect('http://localhost:3000')
+    var socket = io.connect()
 
     socket.on('serverUpdated', function (data) {
 
+      // set Store latestDate prop and update state
       reportStore.latestDate = data.lastDate
       self.setState({info: data})
-      
+
     })
 
-    window.addEventListener('popstate', this.handle_popState)
+    urlState.on('change',function (state) {
+      self.setState(state)
+    })
 
   },
   componentWillUnmount: function() {
-
-    window.removeEventListener('popstate', this.handle_popState)
-
+    // window.removeEventListener('popstate', this.handle_popState)
   },
   render: function (){
 

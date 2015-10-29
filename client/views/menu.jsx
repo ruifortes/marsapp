@@ -1,8 +1,9 @@
 var React = require('react')
-  , classNames = require('classnames')
+  , clx = require('classnames')
 
+var urlState = require('../urlState.js')
 
-var Toggle = require('./components/toggle.jsx')
+var Toggle = require('../components/toggle.jsx')
 
 module.exports = React.createClass({
   getInitialState: function () {
@@ -12,25 +13,10 @@ module.exports = React.createClass({
     }
 
   },
-  handleClick: function (viewKey) {
-
-    if(viewKey == 'about'){
-
-      // var socket = io.connect('http://localhost:3000')
-
-      socket.on('news', function (data) {
-        console.log(data)
-        socket.emit('my other event', { my: 'data' })
-
-      })
-
-      return
-    }
-
-    this.props.onChange(viewKey)
+  handleClick: function (viewKey , viewParams) {
 
     this.setState({isOpen: false})
-
+    urlState.set(viewKey, viewParams)
 
   },
   handleToggleClick: function (isOpen) {
@@ -60,16 +46,14 @@ module.exports = React.createClass({
 
     // create menu item
     var items = [
-        {key:'report', label:'Today'},
+        {key:'report', label:'Report'},
         {key:'list', label:'List'},
         {key:'about', label:'About'}
       ].map(function (item, i) {
 
-        var itemClass = (item.key == self.props.viewKey) ? 'menu-item  active' : 'menu-item'
-
-        return (<li key={item.key} className={itemClass}>
+        return (<li key={item.key} className={clx('menu-item',{'active':item.key == self.props.viewKey})}>
                   <a href='javascript:void(0)' className='pure-menu-link'
-                    onClick={self.handleClick.bind(self,item.key)}>
+                    onClick={self.handleClick.bind(self,item.key,null)}>
                     {item.label}
                   </a>
                 </li>)
@@ -78,9 +62,9 @@ module.exports = React.createClass({
 
 
     return (
-      <nav className={'menu' + (state.isOpen ? ' open' : '')}>
+      <nav className = { clx('menu',{'open':state.isOpen}) }>
         <div className='menu-section left'>
-          <a className='brand' onClick={self.handleClick.bind(self,'')}>
+          <a className='brand' onClick={self.handleClick.bind(self,'','')}>
             Mars Weather
           </a>
           <Toggle isOpen={state.isOpen} onClick={self.handleToggleClick}/>

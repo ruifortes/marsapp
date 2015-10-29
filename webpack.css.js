@@ -15,7 +15,12 @@ module.exports = {
         test: /\.scss$/,
         // loader: 'style-loader!css-loader!sass-loader?sourceMap'
         loader: ExtractTextPlugin.extract('style-loader', 'css-loader!sass-loader?sourceMap')
-      }
+      },
+      {
+        test: /\.(otf|eot|svg|ttf|woff|woff2)$/,
+        // loader: 'url-loader?limit=8192&name=./fonts/[name].[ext]'
+        loader: 'url-loader?limit=1000&name=./fonts/[name].[ext]'
+      },
     ]
   },
   devtool: 'source-map',

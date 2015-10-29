@@ -1,3 +1,10 @@
+
+.brand {
+  display: inline-block;
+  padding: .3em .5em;
+  font-size: 1.4em;
+}
+
 .menu {
   display: block;
   background-color: yellow;
@@ -6,8 +13,6 @@
   line-height: 1.6em;
   overflow: hidden;
 }
-
-
 
 .menu-section {
   overflow: hidden;
@@ -40,11 +45,6 @@
     text-align: center;
     float:none !important;
   }
-}
-
-.brand {
-  display: inline-block;
-  padding: .5em 1em;
 }
 
 .menu-list {

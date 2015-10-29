@@ -4,6 +4,8 @@ var Promise = require('bluebird')
   , util = require('util')
   , moment = require('moment')
 
+var cfg = require('../config.js')
+
 var theApi
 var sockets
 
@@ -85,6 +87,7 @@ var Api = function (){
 
       return new Promise(function (resolve, reject) {
 
+        // recursive function to get each page of reports from api
         function _fetch(startDate, page){
           page = page || 1
           console.log(page > 1  ? 'Fetching page' + page : 'Fetching...')
@@ -97,22 +100,27 @@ var Api = function (){
             results.push.apply(results, data.results)
 
             if(data.next){
+              // there's more pages so lets recurse
               _fetch(startDate, page + 1)
             } else {
+              // no more pages return
               if(!results.length) console.log('...nothing new')
               resolve(results)
             }
 
           })
           .catch(function (err){
+            console.log('error fetching from api')
             reject(err)
           })
 
         }
 
+        // start start with first page
         _fetch(startDate, 1)
 
-      }).then(function (data) {
+      })
+      .then(function (data) { //
 
         if(!data.length) return 0
 
@@ -141,19 +149,18 @@ var Api = function (){
 
         return Promise.all(insertTasks)
               .then(function (ret) {
-                console.log('finish fetching')
+                console.log('finish writing to DB')
                 return data.length
               })
               .catch(function (err) {
-                console.log(err)
+                console.log('error writing to DB')
+                return Promise.reject(err)
               })
 
       })
 
     })
-    // .catch(function (err) {
-    //   return Promise.reject(err)
-    // })
+
   }
 
   this.fetchEvery = function (length, unit) { // ex: 2, 'minutes'
@@ -179,7 +186,9 @@ var Api = function (){
     }, moment.duration(length, unit).asMilliseconds())
   }
 
-  this.resetDB = function () {
+  this.resetDB = function (date) {
+
+    var self = this
 
     return knex.schema.dropTableIfExists('reports').then(function (ret){
 
@@ -203,9 +212,12 @@ var Api = function (){
         table.string('sunset')
       })
 
+    }).then(function () {
+      if(date.isValid()){
+        return self.fetchReports(date)
+      }
+      return true
     })
-
-
 
   }
 
@@ -267,17 +279,17 @@ function addRoutes(api, router){
     var fromDate = moment(req.query.from || null)
       , toDate = moment(req.query.to || null)
       , page = parseInt(req.query.page || 1)
-      , pageLenght = parseInt(req.query.pageLenght || 10)
+      , pageLength = parseInt(req.query.pageLength || 10)
 
     if(req.query.from != null && !fromDate.isValid()) return res.status(404).send('invalid fromDate param')
     if(req.query.to != null && !toDate.isValid()) return res.status(404).send('invalid toDate param')
     if(isNaN(page)) return res.status(404).send('invalid page param')
-    if(isNaN(pageLenght)) return res.status(404).send('invalid page param')
+    if(isNaN(pageLength)) return res.status(404).send('invalid page param')
 
     fromDate = fromDate.isValid() || undefined
     toDate = toDate.isValid() || undefined
 
-    api.getReportList(fromDate, toDate, page, pageLenght).then(function (rows){
+    api.getReportList(fromDate, toDate, page, pageLength).then(function (rows){
 
       rows.map(function (report) {
         report.terrestrial_date = moment(report.terrestrial_date).format('YYYY-MM-DD')
@@ -318,8 +330,8 @@ module.exports = function (router, io){
       })
     })
 
-
-    theApi.fetchEvery(1, 'minutes')
+    console.log('Updating every ' + cfg.updateFrequence.join(' '));
+    theApi.fetchEvery.apply(theApi, cfg.updateFrequence)
     return theApi
   } else {
     throw new Error("can't initialize initialize api without router")

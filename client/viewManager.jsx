@@ -1,31 +1,33 @@
-var React = require('react')
+var _react = require('react')
   , PureRenderMixin = require('react-addons-pure-render-mixin')
 
-var ReportList = require('./reportList_view.jsx')
-  , ReportView = require('./report_view.jsx')
+var ReportList = require('./views/reportList/reportList_view.jsx')
+  , ReportView = require('./views/report/report_view.jsx')
+  , About      = require('./views/about/about_view.jsx')
+  , Welcome    = require('./views/welcome/welcome_view.jsx')
 
-module.exports = React.createClass({
+module.exports = _react.createClass({
   mixins: [PureRenderMixin],
   render: function () {
 
     var content
-
     switch (this.props.viewKey) {
       case 'report':
-        content = <ReportView dateStr={this.props.viewParams}/>
+        content = <ReportView initialDateStr={this.props.viewParams}/>
         break
       case 'list':
-        content = <ReportList page={this.props.viewParams}/>
+        content = <ReportList initialPage={this.props.viewParams}/>
+        break
+      case 'about':
+        content = <About/>
         break
       default:
-        content = <h1>{'theres no view ' + this.props.viewKey}</h1>
+        content = <Welcome/>
     }
 
-    return content
-
-    // return (
-    //   <div className='fillflex'>{content}</div>
-    // )
+    return (
+      <div className='fillflex'>{content}</div>
+    )
 
   }
 

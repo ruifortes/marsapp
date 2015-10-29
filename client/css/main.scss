@@ -1,15 +1,20 @@
 @import 'config';
 @import 'reset';
-@import '_layout';
-@import '_menu';
-@import '_statusBar';
-@import '_report_view';
+@import 'layout';
+@import 'menu';
+@import 'statusBar';
+@import 'report';
+@import 'reportList';
+@import 'about';
+@import 'welcome';
+@import 'icons';
+
 
 // @import '../components/toggle';
 
 
 // needed in order to fill flex container (check .main)
-.fillflex {
+.main > div, .fillflex {
   position: absolute;
   height: 100%;
   width: 100%;
@@ -21,3 +26,7 @@
       display: none;
   }
 }
+
+// .isLoading {
+//   overflow: hidden;
+// }
