@@ -1,3 +1,6 @@
+// not working, use node script instead
+// npm run icons
+
 var ExtractIconsCss = require('extract-text-webpack-plugin')
 
 module.exports = {

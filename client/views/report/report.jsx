@@ -5,10 +5,16 @@ module.exports = React.createClass({
 
     var rep = this.props.report
 
-    if (!rep) {
+    if (rep === null) {
       return (
         <div className='report empty'>
-          <p>No report</p>
+          <p className='center'>No report</p>
+        </div>
+      )
+    } else if (rep === undefined) {
+      return (
+        <div className='center'>
+          <div className='progress'>Loading…</div>
         </div>
       )
     }

@@ -32,5 +32,8 @@ node_modules
 # backupfiles
 *.bkp
 
+# client bundle
+# public/*
+
 # local temp files
 _local

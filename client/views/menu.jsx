@@ -1,7 +1,7 @@
 var React = require('react')
   , clx = require('classnames')
 
-var urlState = require('../urlState.js')
+var Link = require('react-router').Link
 
 var Toggle = require('../components/toggle.jsx')
 
@@ -16,7 +16,6 @@ module.exports = React.createClass({
   handleClick: function (viewKey , viewParams) {
 
     this.setState({isOpen: false})
-    urlState.set(viewKey, viewParams)
 
   },
   handleToggleClick: function (isOpen) {
@@ -51,22 +50,26 @@ module.exports = React.createClass({
         {key:'about', label:'About'}
       ].map(function (item, i) {
 
-        return (<li key={item.key} className={clx('menu-item',{'active':item.key == self.props.viewKey})}>
-                  <a href='javascript:void(0)' className='pure-menu-link'
-                    onClick={self.handleClick.bind(self,item.key,null)}>
-                    {item.label}
-                  </a>
-                </li>)
+        return (<li key={item.key} className='menu-item'>
+          <Link to={'/' + item.key} activeClassName="active">{item.label}</Link>
+        </li>)
 
+        // return (<li key={item.key} className={clx('menu-item',{'active':item.key == self.props.viewKey})}>
+        //           <a href='javascript:void(0)' className='pure-menu-link'
+        //             onClick={self.handleClick.bind(self,item.key,null)}>
+        //             {item.label}
+        //           </a>
+        //         </li>)
     })
 
 
     return (
       <nav className = { clx('menu',{'open':state.isOpen}) }>
         <div className='menu-section left'>
-          <a className='brand' onClick={self.handleClick.bind(self,'','')}>
+          {/*<a className='brand' onClick={self.handleClick.bind(self,'','')}>
             Mars Weather
-          </a>
+          </a>*/}
+          <Link to='/' className='brand'>Mars Weather</Link>
           <Toggle isOpen={state.isOpen} onClick={self.handleToggleClick}/>
         </div>
         <div className='menu-section right collapse'>

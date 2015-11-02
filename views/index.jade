@@ -3,18 +3,17 @@ html(lang='pt-pt')
   head  
     meta(charset='utf8')
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="mobile-web-app-capable" content="yes")
     
     title Mars Weather  
     
-    //- link(rel='stylesheet', href='http://yui.yahooapis.com/pure/0.6.0/pure.css')
-    //- link(rel='stylesheet', href='https://storage.googleapis.com/code.getmdl.io/1.0.5/material.deep_orange-light_blue.min.css')
-    link(rel='stylesheet', href='styles.css')
+    link(rel='stylesheet', href='/main.css')
     
-    script(src='https://fb.me/react-with-addons-0.14.0.js')
-    script(src='https://fb.me/react-dom-0.14.0.js')
+    script(src='https://fb.me/react-with-addons-0.14.0.min.js')
+    script(src='https://fb.me/react-dom-0.14.0.min.js')
     
   body
     #react.wrapper!= content
     
-  script(src='main.js', defer)
+  script(src='/main.js', defer)
     

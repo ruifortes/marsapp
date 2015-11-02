@@ -3,6 +3,8 @@ var React = require('react')
   // , objectAssign = require('object-assign')
   // , touch = require('hammerjs')
 
+var {History} = require('react-router')
+
 var reportStore = require('../../stores/report_store.js')
 
 var ReportNav = require('./report_nav.jsx')
@@ -10,10 +12,12 @@ var Report = require('./report.jsx')
 
 
 module.exports = React.createClass({
+  mixins: [ History ],
+
   getInitialState: function() {
     return {
       report: undefined,
-      dateStr: this.props.initialDateStr
+      dateStr: this.props.params.date
     }
   },
   handle_storeChange: function (data) {
@@ -21,8 +25,9 @@ module.exports = React.createClass({
   },
 
   componentWillReceiveProps: function (nextProps) {
-    reportStore.getReport(nextProps.initialDateStr)
+    reportStore.getReport(nextProps.params.date)
   },
+
   componentDidMount: function () {
     reportStore.on('change', this.handle_storeChange)
     reportStore.getReport(this.state.dateStr)
@@ -36,7 +41,7 @@ module.exports = React.createClass({
 
     return (
       <div className='report_view'>
-        <ReportNav className='report_nav' rep={rep} date={this.state.dateStr}/>
+        <ReportNav className='report_nav' rep={rep} dateStr={this.state.dateStr}/>
         <Report className='report' report={rep}/>
       </div>
     )

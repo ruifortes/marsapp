@@ -44,10 +44,19 @@ var api = require('./server/api.js')(apiRouter, io)
 
 app.use('/api', apiRouter)
 
+// moke it isomorphic
+// require('node-jsx-babel').install()
+// var React = require('react')
+//   , ReactApp = React.createFactory(require('./client/app.jsx'))
+
 // set base url
 app.use('/',  function(req, res) {
+
+  // var reactHtml = React.renderToString(ReactApp({}))
+
   // using jade to make this isomorphic later
-  res.render('index', { content: 'TEST CONTENT' })
+  // res.render('index', { content: reactHtml})
+  res.render('index', { content: 'reactHtml'})
 
 })
 

@@ -24,12 +24,6 @@ module.exports = {
     ]
   },
   devtool: 'source-map',
-  externals: {
-    'react': 'React',
-  },
-  resolve: {
-    extensions: ['', '.js', '.jsx']
-  },
   plugins: [
     new ExtractTextPlugin('[name].css')
   ]

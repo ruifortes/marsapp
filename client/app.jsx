@@ -1,21 +1,29 @@
+require('./css/main.scss')
+
 var React = require('react')
   , ReactDOM = require('react-dom')
   , request = require('reqwest')
   , io = require('socket.io-client')
   , moment = require('moment')
 
-var ViewManager = require('./viewManager.jsx')
-  , Menu = require('./views/menu.jsx')
+var {Router, Route, Link, IndexRoute} = require('react-router')
+var history = require('history/lib/createBrowserHistory')()
+
+var Menu = require('./views/menu.jsx')
   , StatusBar = require('./views/statusBar.jsx')
 
+var ReportList = require('./views/reportList/reportList_view.jsx')
+  , Report = require('./views/report/report_view.jsx')
+  , About      = require('./views/about/about_view.jsx')
+  , Welcome    = require('./views/welcome/welcome_view.jsx')
+
 var reportStore = require('./stores/report_store.js')
-var urlState = require('./urlState.js')
 
 var App = React.createClass({
   getInitialState: function (){
-
-    return urlState.get()
-
+    return {
+      info: null
+    }
   },
 
   componentDidMount: function (){
@@ -28,11 +36,6 @@ var App = React.createClass({
       // set Store latestDate prop and update state
       reportStore.latestDate = data.lastDate
       self.setState({info: data})
-
-    })
-
-    urlState.on('change',function (state) {
-      self.setState(state)
     })
 
   },
@@ -46,18 +49,36 @@ var App = React.createClass({
     return (
       <div id='app' onKeyUp={this.handle_keyPress}>
         <header className='header'>
-          <Menu viewKey={state.view} onChange={this.handle_navChange}/>
+          <Menu/>
         </header>
         <main className='main'>
-          <ViewManager viewKey={state.view} viewParams={state.viewParams}/>
+          <div className='fillflex'>
+            {this.props.children}
+          </div>
         </main>
         <footer className='footer'>
           <StatusBar info={state.info}/>
         </footer>
       </div>
     )
+
   }
 
 })
 
-ReactDOM.render(<App/>, document.getElementById('react'))
+var notFound = function () {
+  return <div className='center'>NOT FOUND</div>
+}
+
+
+ReactDOM.render((
+  <Router history={history}>
+    <Route path="/" component={App}>
+      <IndexRoute component={Welcome}/>
+      <Route path="report(/:date)" component={Report}/>
+      <Route path="list" component={ReportList}/>
+      <Route path="about" component={About}/>
+      <Route path="*" component={notFound}/>
+    </Route>
+  </Router>
+), document.getElementById('react'))

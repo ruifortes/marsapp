@@ -1,8 +1,6 @@
 var EventEmitter = require('events').EventEmitter
 var request = require('reqwest')
 
-var urlState = require('../urlState.js')
-
 var ReportStore = function(){
 
   this.latestDate = null
@@ -16,11 +14,13 @@ var ReportStore = function(){
       data: {page: page, pageLength: pageLength}
     }).then(function (res) {
 
-      self.emit('change' ,{
+      var result = {
         reportList: res
-      })
+      }
+      
+      self.emit('change' , result)
 
-      return res
+      return result
 
     })
 
@@ -29,22 +29,29 @@ var ReportStore = function(){
   this.getReport = function (dateStr){
     var self = this
 
-    // urlState.set(null, dateStr)
-
     dateStr = dateStr || ''
 
     return request('/api/report/' + dateStr).then(function (res) {
 
-      self.emit('change' ,{
+      var result = {
         report: res,
-        dateStr: dateStr
-      })
+        dateStr: dateStr || res.terrestrial_date
+      }
+
+      self.emit('change', result)
+
+      return result
 
     }).catch(function (err) {
-      self.emit('change' ,{
+
+      var result = {
         report: null,
-        dateStr: dateStr
-      })
+        dateStr: dateStr || res.terrestrial_date
+      }
+
+      self.emit('change' ,result)
+
+      return result
     })
 
   }

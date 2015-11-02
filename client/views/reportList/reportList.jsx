@@ -2,18 +2,13 @@ var React = require('react')
   , PureRenderMixin = require('react-addons-pure-render-mixin')
   , responsiveMixin = require('react-responsive-mixin')
 
-var urlState = require('../../urlState.js')
+var Link = require('react-router').Link
 
 var ListItem = React.createClass({
   mixins: [PureRenderMixin, responsiveMixin],
 
   getInitialState: function () {
     return {small: false}
-  },
-  hancleClick: function (evt, _evt) {
-    urlState.set('report', this.props.report.terrestrial_date)
-    evt.nativeEvent.stopImmediatePropagation()
-    return false
   },
   componentDidMount: function() {
 
@@ -53,15 +48,16 @@ var ListItem = React.createClass({
       )
     })
 
-    var href = 'javascript:void(0)'
-    // var href = 'report?' + rep.terrestrial_date
+    // var href = 'javascript:void(0)'
+    var href = '/report/' + rep.terrestrial_date
 
     return (
       <li>
         <i className={iconClass}/>
-        <a href={href}  onClick={this.hancleClick}>
+        <Link to={href}>{fields}</Link>
+        {/*<a href={href}  onClick={this.hancleClick}>
           {fields}
-        </a>
+        </a>*/}
       </li>
     )
   }
@@ -74,7 +70,13 @@ var ReportList =  React.createClass({
 
     var list = this.props.reportList || []
 
-    if(!list.length) return <div>LISTEMPTY</div>
+    if(!list.length){
+      return (
+        <div className='center'>
+          <div className='progress'>Loading…</div>
+        </div>
+      )
+    }
 
     var items = list.map(function (item, i) {
       return <ListItem key={i} report={item}/>
