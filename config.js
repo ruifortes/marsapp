@@ -1,19 +1,15 @@
 module.exports = {
   host: {
-    ip: 'localhost',
-    port: 3000
-    // ip: '0.0.0.0',
-    // port: 80
+    ip: process.env.OPENSHIFT_NODEJS_IP,
+    port: process.env.OPENSHIFT_NODEJS_PORT
   },
   db: {
     client: 'pg',
     connection: {
-      host     : 'localhost',
-        // user     : 'postgres',
-        // password : 'rmrsf71',
-      user     : 'mars',
-      password : 'mars',
-      database : 'marsWeather'
+      host     : process.env.OPENSHIFT_POSTGRESQL_DB_HOST,
+      user     : process.env.OPENSHIFT_POSTGRESQL_DB_USERNAME,
+      password : process.env.OPENSHIFT_POSTGRESQL_DB_PASSWORD,
+      database : 'optylon'
     },
     debug: false
   },
