@@ -1,5 +1,13 @@
 var EventEmitter = require('events').EventEmitter
-var request = require('reqwest')
+var querystring = require('querystring')
+
+require('isomorphic-fetch')
+
+
+function _queryStr(obj){
+  var str = querystring.stringify(obj)
+  return !!str ? '?' + str : ''
+}
 
 var ReportStore = function(){
 
@@ -9,20 +17,20 @@ var ReportStore = function(){
     var self = this
     pageLength = pageLength || 30
 
-    return request({
-      url: '/api/reports',
-      data: {page: page, pageLength: pageLength}
-    }).then(function (res) {
+    return fetch('/api/reports' + _queryStr({page: page, pageLength: pageLength}))
+      .then( response =>
+        response.json().then( json => ({ json, response }))
+      ).then( ({ json, response }) => {
 
-      var result = {
-        reportList: res
-      }
-      
-      self.emit('change' , result)
+        if (!response.ok) {
+          return Promise.reject(json)
+        }
 
-      return result
+        var result = {reportList: json}
+        self.emit('change' , result)
+        return result
 
-    })
+      }).catch( err => console.log('parsing failed', err) )
 
   }
 
@@ -31,28 +39,26 @@ var ReportStore = function(){
 
     dateStr = dateStr || ''
 
-    return request('/api/report/' + dateStr).then(function (res) {
+    return fetch('/api/report/' + dateStr)
+      .then( response => {
 
-      var result = {
-        report: res,
-        dateStr: dateStr || res.terrestrial_date
-      }
+        if (!response.ok) {
+          return Promise.resolve({json:null, response})
+        }
 
-      self.emit('change', result)
+        return response.json().then( json => ({json, response}) )
 
-      return result
+      }).then( ({json, response}) => {
 
-    }).catch(function (err) {
+        var result = {
+          report: json,
+          dateStr: dateStr || json.terrestrial_date
+        }
 
-      var result = {
-        report: null,
-        dateStr: dateStr || res.terrestrial_date
-      }
+        self.emit('change', result)
+        return result
 
-      self.emit('change' ,result)
-
-      return result
-    })
+      }).catch( err => console.log('parsing failed', err) )
 
   }
 

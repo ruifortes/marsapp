@@ -1,8 +1,10 @@
+require('isomorphic-fetch')
+
 var Promise = require('bluebird')
   , knex = require('./knexInstance.js')
-  , request = require('request-promise')
   , util = require('util')
   , moment = require('moment')
+
 
 var cfg = require('../config.js')
 
@@ -52,7 +54,7 @@ var Api = function (){
     if(this._lastDate){
       return Promise.return(this._lastDate)
     } else {
-      return knex('reports').max('terrestrial_date').then(function (rows) {
+      return knex('reports').max('terrestrial_date as max').then(function (rows) {
         if (rows.length > 0) {
           this._lastDate = moment.utc(rows[0].max)
           return this._lastDate
@@ -91,9 +93,17 @@ var Api = function (){
         function _fetch(startDate, page){
           page = page || 1
           console.log(page > 1  ? 'Fetching page' + page : 'Fetching...')
-          return request({
-            uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page)
-            , json: true
+
+          // return request({
+          //   uri: util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page)
+          //   , json: true
+          // })
+          return fetch(util.format('http://marsweather.ingenology.com/v1/archive/?terrestrial_date_start=%s&page=%d', startDate.format('YYYY-MM-DD'), page))
+          .then(function (response) {
+            if (!response.ok) {
+              return Promise.reject(json)
+            }
+            return response.json()
           })
           .then(function (data){
 

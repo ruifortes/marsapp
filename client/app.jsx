@@ -2,7 +2,6 @@ require('./css/main.scss')
 
 var React = require('react')
   , ReactDOM = require('react-dom')
-  , request = require('reqwest')
   , io = require('socket.io-client')
   , moment = require('moment')
 

@@ -6,14 +6,14 @@ module.exports = {
     // port: 80
   },
   db: {
-    client: 'pg',
+    client: 'mysql',
     connection: {
       host     : 'localhost',
         // user     : 'postgres',
         // password : 'rmrsf71',
       user     : 'mars',
-      password : 'mars',
-      database : 'marsWeather'
+      password : 'weather',
+      database : 'marsweather'
     },
     debug: false
   },
